@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  trackers      Tracker[]
+  entries       Entry[]
+}
+
+model Tracker {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fields      Field[]
+  entries     Entry[]
+}
+
+model Field {
+  id          String    @id @default(cuid())
+  name        String
+  type        String    // text, number, date, toggle, file, location
+  required    Boolean   @default(false)
+  options     String?   // JSON string for select options
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  trackerId   String
+  tracker     Tracker   @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+  values      Value[]
+}
+
+model Entry {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  trackerId   String
+  tracker     Tracker   @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  values      Value[]
+}
+
+model Value {
+  id          String    @id @default(cuid())
+  textValue   String?
+  numberValue Float?
+  dateValue   DateTime?
+  boolValue   Boolean?
+  fileValue   String?   // URL or path to file
+  locationValue String? // JSON string with lat/lng
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  fieldId     String
+  field       Field     @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  entryId     String
+  entry       Entry     @relation(fields: [entryId], references: [id], onDelete: Cascade)
+}
+
